@@ -4,11 +4,13 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { showNotification } from "@api/Notifications";
 import { definePluginSettings } from "@api/Settings";
+import { Button } from "@components/Button";
 import { Logger } from "@utils/Logger";
 import { relaunch } from "@utils/native";
 import definePlugin, { OptionType, PluginNative } from "@utils/types";
-import { showToast } from "@webpack/common";
+import { React, showToast } from "@webpack/common";
 
 const Native = VencordNative.pluginHelpers.CustomUpdater as PluginNative<typeof import("./native")>;
 const logger = new Logger("CustomUpdater");
@@ -31,8 +33,16 @@ const settings = definePluginSettings({
     },
     checkIntervalHours: {
         type: OptionType.NUMBER,
-        description: "Hours between update checks. 0 disables the periodic check (a check still runs shortly after startup).",
-        default: 6
+        description: "Hours between update checks. 0 means check on startup only, like the stock updater.",
+        default: 0
+    },
+    checkNow: {
+        type: OptionType.COMPONENT,
+        component: () => (
+            <Button onClick={() => void checkForUpdate(true)}>
+                Check for updates now
+            </Button>
+        )
     },
     appliedVersion: {
         type: OptionType.STRING,
@@ -66,7 +76,17 @@ async function checkForUpdate(manual = false) {
         // Only record the version after a successful download+write, so a
         // failed update is retried on the next check instead of skipped.
         settings.store.appliedVersion = result.version;
-        showToast({ text: `CustomUpdater: update ${result.version} downloaded. Restart Discord to apply it.`, variant: "success" });
+        // Same notification as the stock updater: permanent, click to restart.
+        // The stock updater delays it 10 seconds; this check already runs
+        // 60 seconds after startup, so no extra delay here.
+        await showNotification({
+            title: "Custom Vencord has been updated!",
+            body: "Click here to restart",
+            color: "var(--green-360)",
+            permanent: true,
+            noPersist: true,
+            onClick: relaunch
+        });
         if (settings.store.autoRestart) {
             setTimeout(relaunch, 1500);
         }
@@ -100,7 +120,5 @@ export default definePlugin({
         intervalId = undefined;
     },
 
-    // Manual trigger: disable and re-enable the plugin, or restart Discord.
-    // A periodic check also runs on the interval above.
     checkForUpdate
 });

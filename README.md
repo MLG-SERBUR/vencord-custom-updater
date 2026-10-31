@@ -6,8 +6,9 @@ official one).
 
 ## How it works
 
-1. The renderer side checks on startup (after 60 seconds) and then every
-   `checkIntervalHours` hours.
+1. The renderer side checks on startup (after 60 seconds), like the stock
+   updater. `checkIntervalHours` is 0 by default (startup only); set it
+   higher for a periodic check while Discord stays open.
 2. The native side (main process, `native.ts`) fetches
    `https://api.github.com/repos/<repo>/releases/latest`, reads the
    `version.json` asset, and compares its `version` to the plugin's
@@ -20,9 +21,13 @@ official one).
    restores the backups.
 4. It records `appliedVersion` only after a successful write, so a failed
    update is retried on the next check.
-5. Restart Discord to load the new files. With `autoRestart` on, the plugin
-   restarts Discord itself 1.5 seconds after downloading. That setting is
-   off by default, because restarting mid-stream would kill the stream.
+5. After a download, the plugin shows the same notification as the stock
+   updater: "Custom Vencord has been updated! Click here to restart".
+   Clicking it restarts Discord and loads the new files. With `autoRestart`
+   on, the plugin restarts Discord itself 1.5 seconds after downloading
+   instead. That setting is off by default, because restarting mid-stream
+   would kill the stream. A "Check for updates now" button in the plugin
+   settings does a manual check, like the stock updater's Update button.
 
 ## Safety limits (native side)
 
@@ -66,9 +71,27 @@ real Discord user ID if you want the author line to link to a profile.
 - `repo` — builder repo, default `MLG-SERBUR/vencord-customstream-build`.
 - `autoDownload` — default on.
 - `autoRestart` — default off (see above).
-- `checkIntervalHours` — default 6. 0 disables the periodic check.
+- `checkIntervalHours` — default 0 (startup only, like the stock updater).
+  Set higher for a periodic check while Discord stays open.
 - `appliedVersion` — managed by the plugin. Clear it to force a re-download
   of the latest release.
+
+## Differences from the stock updater, and why they stay
+
+- Version identity: the stock updater compares the build's embedded gitHash
+  to the last token of the release name. This build is not one repo commit,
+  it is three repos combined, so the version is the SHA combo in
+  `version.json` instead, compared to the plugin's `appliedVersion` setting.
+- Source: the stock updater's repo is baked in at build time. This plugin's
+  repo is a setting, changeable without rebuilding. That is the whole
+  point: a baked official remote is what loses a custom build.
+- Changelog: the stock updater shows upstream commits from a compare API
+  call. The builder repo has no such commit history, so the changelog
+  lives in the builder release notes instead, not in the client.
+- Robustness: the stock updater is core code and runs even with plugins
+  off. This plugin only updates while it is enabled. If it breaks, the
+  fallback is a manual source build + inject, same as the stock updater's
+  "re-install with the installer" fallback.
 
 ## Notes
 
