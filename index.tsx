@@ -26,16 +26,6 @@ const settings = definePluginSettings({
         description: "Download a new build automatically when one is found. Off means you only get a toast saying an update is available.",
         default: true
     },
-    autoRestart: {
-        type: OptionType.BOOLEAN,
-        description: "Restart Discord automatically after a new build is downloaded. Off is safer while streaming: restart manually instead.",
-        default: false
-    },
-    checkIntervalHours: {
-        type: OptionType.NUMBER,
-        description: "Hours between update checks. 0 means check on startup only, like the stock updater.",
-        default: 0
-    },
     checkNow: {
         type: OptionType.COMPONENT,
         component: () => (
@@ -51,7 +41,6 @@ const settings = definePluginSettings({
     }
 });
 
-let intervalId: ReturnType<typeof setInterval> | undefined;
 let timeoutId: ReturnType<typeof setTimeout> | undefined;
 let checking = false;
 
@@ -87,9 +76,6 @@ async function checkForUpdate(manual = false) {
             noPersist: true,
             onClick: relaunch
         });
-        if (settings.store.autoRestart) {
-            setTimeout(relaunch, 1500);
-        }
     } catch (err) {
         logger.error("Update check failed:", err);
         showToast({ text: `CustomUpdater: update failed: ${err instanceof Error ? err.message : String(err)}`, variant: "critical" });
@@ -105,19 +91,14 @@ export default definePlugin({
     settings,
 
     start() {
-        // Short delay so Discord finishes starting before the first check.
+        // Startup only, like the stock updater. Short delay so Discord
+        // finishes starting before the first check.
         timeoutId = setTimeout(() => void checkForUpdate(), 60_000);
-        const hours = settings.store.checkIntervalHours;
-        if (hours > 0) {
-            intervalId = setInterval(() => void checkForUpdate(), hours * 3_600_000);
-        }
     },
 
     stop() {
         if (timeoutId) clearTimeout(timeoutId);
-        if (intervalId) clearInterval(intervalId);
         timeoutId = undefined;
-        intervalId = undefined;
     },
 
     checkForUpdate

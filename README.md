@@ -7,8 +7,8 @@ official one).
 ## How it works
 
 1. The renderer side checks on startup (after 60 seconds), like the stock
-   updater. `checkIntervalHours` is 0 by default (startup only); set it
-   higher for a periodic check while Discord stays open.
+   updater. No periodic check: a long-running Discord session gets the
+   update on its next restart, same as stock.
 2. The native side (main process, `native.ts`) fetches
    `https://api.github.com/repos/<repo>/releases/latest`, reads the
    `version.json` asset, and compares its `version` to the plugin's
@@ -23,11 +23,10 @@ official one).
    update is retried on the next check.
 5. After a download, the plugin shows the same notification as the stock
    updater: "Custom Vencord has been updated! Click here to restart".
-   Clicking it restarts Discord and loads the new files. With `autoRestart`
-   on, the plugin restarts Discord itself 1.5 seconds after downloading
-   instead. That setting is off by default, because restarting mid-stream
-   would kill the stream. A "Check for updates now" button in the plugin
-   settings does a manual check, like the stock updater's Update button.
+   Clicking it restarts Discord and loads the new files. There is no
+   automatic restart: clicking the notification is the restart, same as
+   stock. A "Check for updates now" button in the plugin settings does a
+   manual check, like the stock updater's Update button.
 
 ## Safety limits (native side)
 
@@ -70,9 +69,6 @@ real Discord user ID if you want the author line to link to a profile.
 
 - `repo` — builder repo, default `MLG-SERBUR/vencord-customstream-build`.
 - `autoDownload` — default on.
-- `autoRestart` — default off (see above).
-- `checkIntervalHours` — default 0 (startup only, like the stock updater).
-  Set higher for a periodic check while Discord stays open.
 - `appliedVersion` — managed by the plugin. Clear it to force a re-download
   of the latest release.
 
