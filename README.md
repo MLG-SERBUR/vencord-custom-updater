@@ -6,8 +6,8 @@ official one).
 
 ## How it works
 
-1. The renderer side checks on startup (after 60 seconds), like the stock
-   updater. No periodic check: a long-running Discord session gets the
+1. The renderer side checks instantly on startup, like the stock
+   updater (plugins start at WebpackReady, so Discord is already up). No periodic check: a long-running Discord session gets the
    update on its next restart, same as stock.
 2. The native side (main process, `native.ts`) fetches
    `https://api.github.com/repos/<repo>/releases/latest`, reads the

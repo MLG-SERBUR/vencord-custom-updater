@@ -41,7 +41,6 @@ const settings = definePluginSettings({
     }
 });
 
-let timeoutId: ReturnType<typeof setTimeout> | undefined;
 let checking = false;
 
 async function checkForUpdate(manual = false) {
@@ -91,14 +90,10 @@ export default definePlugin({
     settings,
 
     start() {
-        // Startup only, like the stock updater. Short delay so Discord
-        // finishes starting before the first check.
-        timeoutId = setTimeout(() => void checkForUpdate(), 60_000);
-    },
-
-    stop() {
-        if (timeoutId) clearTimeout(timeoutId);
-        timeoutId = undefined;
+        // Startup only, like the stock updater, but instant: plugins
+        // start at WebpackReady, so Discord is already up when this runs.
+        // No delay, no timer to clean up, so no stop() needed.
+        void checkForUpdate();
     },
 
     checkForUpdate
