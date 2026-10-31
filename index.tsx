@@ -65,8 +65,7 @@ async function checkForUpdate(manual = false) {
         // failed update is retried on the next check instead of skipped.
         settings.store.appliedVersion = result.version;
         // Same notification as the stock updater: permanent, click to restart.
-        // The stock updater delays it 10 seconds; this check already runs
-        // 60 seconds after startup, so no extra delay here.
+        // No extra delay: the check itself runs at plugin start.
         await showNotification({
             title: "Custom Vencord has been updated!",
             body: "Click here to restart",
