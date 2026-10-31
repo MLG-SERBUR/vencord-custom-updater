@@ -13,20 +13,20 @@ official one).
    `https://api.github.com/repos/<repo>/releases/latest`, reads the
    `version.json` asset, and compares its `version` to the plugin's
    `appliedVersion` setting.
-3. If the version is new and `autoDownload` is on, the native side downloads
+3. If the version is new, the native side downloads
    every dist file for the current platform, backs up the existing files
    to `*.customupdater-bak`, then writes the new files over the folder
    holding the running Vencord files (same folder the stock HTTP updater
    writes to). Downloads happen before any write, and a failed write
-   restores the backups.
+   restores the backups. Updating is always on; there is no toggle.
 4. It records `appliedVersion` only after a successful write, so a failed
    update is retried on the next check.
-5. After a download, the plugin shows the same notification as the stock
-   updater: "Custom Vencord has been updated! Click here to restart".
-   Clicking it restarts Discord and loads the new files. There is no
-   automatic restart: clicking the notification is the restart, same as
-   stock. A "Check for updates now" button in the plugin settings does a
-   manual check, like the stock updater's Update button.
+5. After a successful write, the plugin restarts Discord automatically,
+   with no notification and no click. A "Check for updates now" button
+   in the plugin settings does a manual check, like the stock updater's
+   Update button, and a manual check that finds an update also applies
+   it and restarts automatically. A manual check with no update shows an
+   "already up to date" toast, and a failed check shows an error toast.
 
 ## Safety limits (native side)
 
@@ -68,9 +68,12 @@ real Discord user ID if you want the author line to link to a profile.
 ## Settings
 
 - `repo` — builder repo, default `MLG-SERBUR/vencord-customstream-build`.
-- `autoDownload` — default on.
 - `appliedVersion` — managed by the plugin. Clear it to force a re-download
   of the latest release.
+
+There is no notification setting and no auto-update toggle: an update
+found on startup or on a manual check is always applied and Discord is
+always restarted automatically.
 
 ## Differences from the stock updater, and why they stay
 

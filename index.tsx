@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { showNotification } from "@api/Notifications";
 import { definePluginSettings } from "@api/Settings";
 import { Button } from "@components/Button";
 import { Logger } from "@utils/Logger";
@@ -20,11 +19,6 @@ const settings = definePluginSettings({
         type: OptionType.STRING,
         description: "Builder repo to update from, as owner/name. It must publish a rolling 'latest' release with version.json plus the Vencord dist files.",
         default: "MLG-SERBUR/vencord-customstream-build"
-    },
-    autoDownload: {
-        type: OptionType.BOOLEAN,
-        description: "Download a new build automatically when one is found. Off means you only get a toast saying an update is available.",
-        default: true
     },
     checkNow: {
         type: OptionType.COMPONENT,
@@ -56,24 +50,14 @@ async function checkForUpdate(manual = false) {
             if (manual) showToast({ text: "CustomUpdater: already up to date." });
             return;
         }
-        if (!settings.store.autoDownload) {
-            showToast({ text: `CustomUpdater: update ${result.version} available. Enable autoDownload, or restart after downloading it manually.`, variant: "success" });
-            return;
-        }
         await Native.applyUpdate(settings.store.repo, result.files);
         // Only record the version after a successful download+write, so a
         // failed update is retried on the next check instead of skipped.
         settings.store.appliedVersion = result.version;
-        // Same notification as the stock updater: permanent, click to restart.
-        // No extra delay: the check itself runs at plugin start.
-        await showNotification({
-            title: "Custom Vencord has been updated!",
-            body: "Click here to restart",
-            color: "var(--green-360)",
-            permanent: true,
-            noPersist: true,
-            onClick: relaunch
-        });
+        // No notification, no click: restart immediately so the new files
+        // load. A failed apply never reaches this line, so a failed
+        // update does not restart into a half-written build.
+        relaunch();
     } catch (err) {
         logger.error("Update check failed:", err);
         showToast({ text: `CustomUpdater: update failed: ${err instanceof Error ? err.message : String(err)}`, variant: "critical" });
@@ -84,7 +68,7 @@ async function checkForUpdate(manual = false) {
 
 export default definePlugin({
     name: "CustomUpdater",
-    description: "Auto-updates a custom Vencord build from your own builder repo's latest release, without using the stock updater.",
+    description: "Auto-updates and auto-restarts a custom Vencord build from your own builder repo's latest release, without using the stock updater.",
     authors: [{ name: "MLG-SERBUR", id: 0n }],
     settings,
 
